@@ -60,8 +60,8 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
   // Game configuration - could be fetched from a configuration store
   const [gameConfig] = useState({
-    startWord: 'WORD',
-    targetWord: 'GAME',
+    startWord: 'COLD',
+    targetWord: 'WARM',
   });
 
   // Game screen state
@@ -203,13 +203,14 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
     console.log(`Word validation took: ${Date.now() - validationStart} milliseconds`);
 
-    if (!isValid) {
-      setGameState({
-        ...gameState,
-        error: 'Not a valid word.'
-      });
-      return;
-    }
+    // // for testing 
+    // if (!isValid) {
+    //   setGameState({
+    //     ...gameState,
+    //     error: 'Not a valid word.'
+    //   });
+    //   return;
+    // }
 
     // Update game state
     setGameState({
@@ -224,11 +225,13 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
     setInputWord('');
   };
 
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+
   // Start Screen
   if (screen === 'start') {
     return (
       <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#f5f5f5">
-        <image url="background.jpg" imageWidth={400} imageHeight={300} />
+        <image url="space_background.jpg" imageWidth={400} imageHeight={300} />
         <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
         <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
 
@@ -246,6 +249,8 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
     );
   }
 
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+
   // Game Screen
   if (screen === 'game') {
     const rocketImages = [
@@ -260,7 +265,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
           <text>Moves: {gameState.moves}</text>
           <button
             icon="info"
-            appearance="bordered"
+            appearance="secondary"
             onPress={() => showInstructions()}
           />
         </hstack>
@@ -276,7 +281,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
             <spacer grow />
             <button
               icon="edit"
-              appearance="bordered"
+              appearance="secondary"
               onPress={() => {
                 // Show the form using the useForm hook
                 context.ui.showForm(wordInputForm);
@@ -310,6 +315,8 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       </vstack>
     );
   }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
 
   // Complete Screen
   if (screen === 'complete') {
