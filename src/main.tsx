@@ -5,6 +5,10 @@ Devvit.configure({
   redditAPI: true,
 });
 
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+// ! Types and Interfaces
+
 // Define types for game state
 type Screen = 'start' | 'game' | 'complete';
 
@@ -18,10 +22,14 @@ interface GameState {
   startTime: number | null;
   endTime: number | null;
   error: string;
-  [key: string]: string | string[] | number | null; // Add index signature for JSONObject compatibility
+  [key: string]: string | string[] | number | null; // index signature for JSONObject compatibility
 }
 
-// Word validation helper with caching to reduce API calls
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+// ! Word Validation Functions 
+
+// todo Word validation helper with caching to reduce API calls
 const validateWord = async (word: string, context: Devvit.Context): Promise<boolean> => {
   return context.cache(
     async () => {
@@ -53,7 +61,10 @@ const differsBy1Letter = (word1: string, word2: string): boolean => {
   return differences === 1;
 };
 
-// Main game component with proper context typing
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+// ! Main game component
+
 const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
   // Performance tracking
   const [renderStart] = useState(Date.now());
@@ -69,10 +80,10 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
   // Input state for the custom input field
   const [inputWord, setInputWord] = useState<string>('');
-  
+
   // Animation state for the rocket
   const [rocketFrame, setRocketFrame] = useState<number>(0);
-  
+
   // Create a form for word input using the useForm hook
   const wordInputForm = useForm(
     {
@@ -113,7 +124,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
   // Log performance after initial render
   console.log(`Initial render took: ${Date.now() - renderStart} milliseconds`);
 
-  // Show instructions when the info button is pressed
+  // todo Show instructions when the info button is pressed
   const showInstructions = () => {
     context.ui.showToast({
       text: "Change one letter at a time to form valid words until you reach the target word.",
@@ -143,12 +154,12 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
         endTime: null,
         error: '',
       });
-      
+
       // Start rocket animation
       const interval = setInterval(() => {
         setRocketFrame(prev => (prev + 1) % 3); // Assuming 3 frames for animation
       }, 300);
-      
+
       // Store interval ID for cleanup - use regular JavaScript setTimeout
       setTimeout(() => clearInterval(interval), 30 * 60 * 1000); // Auto-cleanup after 30 minutes
     }
@@ -175,7 +186,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       });
       return;
     }
-    
+
     const processedWord = word.toUpperCase();
 
     // Early validation checks (client-side performance)
@@ -220,7 +231,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       moves: gameState.moves + 1,
       error: ''
     });
-    
+
     // Clear input field after successful submission
     setInputWord('');
   };
@@ -228,27 +239,96 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
   // ---------------------------------------------------------------------------------------------------------------------------------------
 
   // Start Screen
+  // if (screen === 'start') {
+  //   return (
+  //     <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#f5f5f5">
+  //       <image url="space_background.jpg" imageWidth={400} imageHeight={300} />
+  //       <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
+  //       <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
+
+  //       <spacer size="medium" />
+
+  //       <hstack gap="small">
+  //         <button appearance="primary" onPress={() => initializeGame('game')}>
+  //           Play Game
+  //         </button>
+  //         <button onPress={() => showInstructions()}>
+  //           How to Play
+  //         </button>
+  //       </hstack>
+  //     </vstack>
+  //   );
+  // }
   if (screen === 'start') {
     return (
-      <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#f5f5f5">
-        <image url="space_background.jpg" imageWidth={400} imageHeight={300} />
-        <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
-        <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
+      <zstack width="100%" height="100%" >
+        <image
+          url="space_background.jpg"
+          imageHeight="256px"
+          imageWidth="256px"
+          width="100%"
+          height="100%"
+          resizeMode="cover"
+        />
+        
+        <vstack alignment="center middle" height="100%" width="100%">
+          <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
+          <spacer size="small" />
 
-        <spacer size="medium" />
+          <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
 
-        <hstack gap="small">
+          <spacer size="large" />
+
           <button appearance="primary" onPress={() => initializeGame('game')}>
             Play Game
           </button>
+          <spacer size="medium" />
           <button onPress={() => showInstructions()}>
             How to Play
           </button>
-        </hstack>
-      </vstack>
+        </vstack>
+      </zstack>
     );
   }
+  // <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle">
+  //   {/* Background image layer */}
+  //   <image 
+  //     url="space_background.jpg" 
+  //     imageWidth={1000} 
+  //     imageHeight={1000} 
+  //     height="100%"
+  //     width="100%"
+  //     position="absolute" 
+  //     top={0} 
+  //     left={0} 
+  //     zIndex={-1}
+  //   />
 
+  //   {/* Content layer */}
+  //   <vstack 
+  //     height="100%" 
+  //     width="100%" 
+  //     padding="large" 
+  //     gap="medium" 
+  //     alignment="center middle" 
+  //     backgroundColor="rgba(245, 245, 245, 0.7)" // Semi-transparent background
+  //     cornerRadius="medium"
+  //   >
+  //     <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
+  //     <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
+
+  //     <spacer size="medium" />
+
+  //     <hstack gap="small">
+  //       <button appearance="primary" onPress={() => initializeGame('game')}>
+  //         Play Game
+  //       </button>
+  //       <button onPress={() => showInstructions()}>
+  //         How to Play
+  //       </button>
+  //     </hstack>
+  //   </vstack>
+  // </vstack>
   // ---------------------------------------------------------------------------------------------------------------------------------------
 
   // Game Screen
@@ -258,7 +338,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       "rocket_2.gif",
       "rocket_3.gif",
     ];
-    
+
     return (
       <vstack height="100%" width="100%" padding="medium" gap="medium" backgroundColor="#f0f7ff">
         <hstack width="100%" gap="large" alignment="top center">
@@ -357,7 +437,10 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
   return null;
 };
 
-// Post preview component for faster initial load
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+// ! Post preview component for faster initial load
+
 const PostPreview = () => (
   <vstack height="100%" width="100%" padding="large" alignment="middle center" backgroundColor="#f5f5f5">
     <text size="large">Word Chain Puzzle</text>
@@ -370,6 +453,10 @@ const PostPreview = () => (
     />
   </vstack>
 );
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+// ! 
 
 // Add a menu item to the subreddit menu
 Devvit.addMenuItem({
