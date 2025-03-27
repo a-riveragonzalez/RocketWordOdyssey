@@ -252,12 +252,11 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
         />
 
         <vstack alignment="center middle" height="100%" width="100%">
-          <text size="xxlarge" weight="bold">Rocket Word Odyssey</text>
-          <spacer size="small" />
+          <text size="xxlarge" weight="bold" color="#FFFFFF">Rocket Word Odyssey</text>
+          <spacer size="medium" />
+          <text size="large">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
 
-          <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
-
-          <spacer size="large" />
+          <spacer size="medium" />
 
           <button appearance="primary" onPress={() => initializeGame('game')}>
             Play Game
@@ -280,16 +279,17 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       <zstack width="100%" height="100%" >
         <image
           url="space_background.jpg"
-          imageHeight="256px"
-          imageWidth="256px"
+          imageHeight="500px"
+          imageWidth="500px"
           width="100%"
           height="100%"
           resizeMode="cover"
         />
 
         <vstack alignment="center middle" height="100%" width="100%">
-          <hstack width="100%" gap="large" alignment="top center">
-            <text>Moves: {gameState.moves}</text>
+          <hstack width="100%" padding="small">
+            <text size="large" >Moves: {gameState.moves}</text>
+            <spacer grow />
             <button
               icon="info"
               appearance="secondary"
@@ -298,30 +298,34 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
           </hstack>
 
           <vstack gap="small" alignment="center middle" grow width="100%">
-            <text size="large">Target Word: {gameState.targetWord}</text>
-            <text size="xlarge" weight="bold">{gameState.currentWord}</text>
+            <text size="xlarge" weight="bold" color="#FFFFFF">Target Word: {gameState.targetWord}</text>
+            <text size="large">Current Word: {gameState.currentWord}</text>
+
+            <spacer size="small" />
 
             {/* Custom input using standard text components */}
-            <hstack width="80%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small">
+            <hstack width="60%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small">
               {/* Since textInput doesn't exist, we'll simulate it with a button that shows a form */}
               <text>{inputWord || 'Enter new word...'}</text>
               <spacer grow />
               <button
                 icon="edit"
-                appearance="secondary"
+                appearance="primary"
                 onPress={() => {
                   // Show the form using the useForm hook
                   context.ui.showForm(wordInputForm);
                 }}
               />
-              <button
+              {/* <button
                 icon="search"
                 appearance="primary"
                 onPress={() => submitWord(inputWord)}
-              />
+              /> */}
             </hstack>
 
             {gameState.error && <text color="red" size="small">{gameState.error}</text>}
+
+            <spacer size="small" />
 
             <image
               url="rocket.gif" // Or use rocketImages[rocketFrame] for animated frames
@@ -330,14 +334,14 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
               imageHeight={100}
             />
 
-            <spacer size="medium" />
+            <spacer size="small" />
 
             <text size="medium">Word Chain:</text>
-            <vstack padding="small" gap="small" width="80%">
+            <hstack padding="small" gap="small" width="80%">
               {gameState.wordChain.map((word, index) => (
                 <text key={index.toString()}>{index + 1}. {word}</text>
               ))}
-            </vstack>
+            </hstack>
           </vstack>
         </vstack>
       </zstack>
@@ -353,7 +357,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
     const seconds = timeSpentSeconds % 60;
 
     return (
-      <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#f0fff0">
+      <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#1b262d">
         <text size="xxlarge" weight="bold">Congratulations!</text>
         <text size="large">You solved the puzzle!</text>
 
@@ -390,16 +394,19 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 // ! Post preview component for faster initial load
 
 const PostPreview = () => (
-  <vstack height="100%" width="100%" padding="large" alignment="middle center" backgroundColor="#f5f5f5">
-    <text size="large">Word Chain Puzzle</text>
-    <text size="medium">Loading game...</text>
-    <image
-      url="rocket.gif"
-      description="Animated rocket"
-      imageWidth={80}
-      imageHeight={80}
-    />
-  </vstack>
+  <zstack width="100%" height="100%" backgroundColor="#1e262b">
+
+    <vstack alignment="center middle" height="100%" width="100%">
+      <text size="large">Rocket Word Odyssey</text>
+      <text size="medium">Loading game...</text>
+      <image
+        url="rocket.gif"
+        description="Animated rocket"
+        imageWidth={80}
+        imageHeight={80}
+      />
+    </vstack>
+  </zstack>
 );
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
