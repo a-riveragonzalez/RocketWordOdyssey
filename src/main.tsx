@@ -228,7 +228,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
         <vstack alignment="center middle" height="100%" width="100%">
           <text size="xxlarge" weight="bold" color="#FFFFFF">Rocket Word Odyssey</text>
           <spacer size="medium" />
-          <text size="large">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
+          <text size="large" color="#b7cad5">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
 
           <spacer size="medium" />
 
@@ -261,7 +261,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
         <vstack alignment="center middle" height="100%" width="100%">
           <hstack width="100%" padding="small">
-            <text size="large" >Moves: {gameState.moves}</text>
+            <text size="large" color="#b7cad5">Moves: {gameState.moves}</text>
             <spacer grow />
             <button
               icon="info"
@@ -272,12 +272,12 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
           <vstack gap="small" alignment="center middle" grow width="100%">
             <text size="xlarge" weight="bold" color="#FFFFFF">Target Word: {gameState.targetWord}</text>
-            <text size="large">Current Word: {gameState.currentWord}</text>
+            <text size="large" color="#b7cad5">Current Word: {gameState.currentWord}</text>
 
             <spacer size="small" />
 
-            <hstack width="60%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small">
-              <text>{inputWord || 'Enter new word...'}</text>
+            <hstack width="60%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small" lightBorderColor='#afc1cc'>
+              <text color="#b7cad5">{inputWord || 'Enter new word...'}</text>
               <spacer grow />
               <button
                 icon="edit"
@@ -301,17 +301,17 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
             <spacer size="small" />
 
-            <text size="medium">Word Chain:</text>
+            <text size="medium" color="#b7cad5">Word Chain:</text>
 
             <vstack width="80%" gap="small">
-              <text size="small">{gameState.wordChain.length > 5 ? `(showing last 5 of ${gameState.wordChain.length})` : ''}</text>
+              <text size="small" color="#b7cad5">{gameState.wordChain.length > 5 ? `(showing last 5 of ${gameState.wordChain.length})` : ''}</text>
               <hstack padding="small" gap="small" alignment='center'>
-                {gameState.wordChain.length > 5 && <text>...</text>}
+                {gameState.wordChain.length > 5 && <text color="#b7cad5">...</text>}
                 {gameState.wordChain.slice(-5).map((word, i) => {
                   // Only show latest five words entered
                   const startPos = Math.max(0, gameState.wordChain.length - 5);
                   return (
-                    <text key={(startPos + i).toString()}>{startPos + i + 1}. {word}</text>
+                    <text key={(startPos + i).toString()} color="#b7cad5">{startPos + i + 1}. {word}</text>
                   );
                 })}
               </hstack>
@@ -344,7 +344,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
         <vstack alignment="center middle" height="100%" width="100%">
           <text size="xxlarge" weight="bold" color="#FFFFFF">Congratulations!</text>
           <spacer size="small" />
-          <text size="large">You solved the puzzle!</text>
+          <text size="large" color="#b7cad5">You solved the puzzle!</text>
 
           <spacer size="medium" />
 
@@ -358,18 +358,18 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
             <spacer size="medium" />
 
-            <vstack padding="large" gap="medium" cornerRadius="medium" border="thin" width="80%" alignment="middle start">
-              <text size="large" weight="bold">Game Stats</text>
-              <text>Total Moves: {gameState.moves}</text>
-              <text>Time Spent: {minutes}m {seconds}s</text>
-              <text size="medium">Word Chain:</text>
+            <vstack padding="large" gap="medium" cornerRadius="medium" border="thin" width="80%" alignment="middle start" lightBorderColor='#afc1cc'>
+              <text size="large" weight="bold" color="#b7cad5">Game Stats</text>
+              <text color="#b7cad5">Total Moves: {gameState.moves}</text>
+              <text color="#b7cad5">Time Spent: {minutes}m {seconds}s</text>
+              <text size="medium" color="#b7cad5">Word Chain:</text>
               <vstack padding="small" gap="small">
                 {Array.from({ length: Math.ceil(gameState.wordChain.length / 4) }).map((_, rowIndex) => (
                   <hstack key={`row-${rowIndex}`} gap="small">
                     {gameState.wordChain.slice(rowIndex * 4, rowIndex * 4 + 4).map((word, colIndex) => {
                       const wordIndex = rowIndex * 4 + colIndex;
                       return (
-                        <text key={wordIndex.toString()} size="small">{wordIndex + 1}. {word}</text>
+                        <text key={wordIndex.toString()} size="small" color="#b7cad5">{wordIndex + 1}. {word}</text>
                       );
                     })}
                   </hstack>
@@ -399,8 +399,8 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 const PostPreview = () => (
   <zstack width="100%" height="100%" backgroundColor="#1e262b">
     <vstack alignment="center middle" height="100%" width="100%">
-      <text size="large">Rocket Word Odyssey</text>
-      <text size="medium">Loading game...</text>
+      <text size="large" color="#b7cad5">Rocket Word Odyssey</text>
+      <text size="medium" color="#b7cad5">Loading game...</text>
       <image
         url="rocket.gif"
         description="Animated rocket"
