@@ -239,26 +239,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
   // ---------------------------------------------------------------------------------------------------------------------------------------
 
   // Start Screen
-  // if (screen === 'start') {
-  //   return (
-  //     <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#f5f5f5">
-  //       <image url="space_background.jpg" imageWidth={400} imageHeight={300} />
-  //       <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
-  //       <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
-
-  //       <spacer size="medium" />
-
-  //       <hstack gap="small">
-  //         <button appearance="primary" onPress={() => initializeGame('game')}>
-  //           Play Game
-  //         </button>
-  //         <button onPress={() => showInstructions()}>
-  //           How to Play
-  //         </button>
-  //       </hstack>
-  //     </vstack>
-  //   );
-  // }
   if (screen === 'start') {
     return (
       <zstack width="100%" height="100%" >
@@ -270,9 +250,9 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
           height="100%"
           resizeMode="cover"
         />
-        
+
         <vstack alignment="center middle" height="100%" width="100%">
-          <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
+          <text size="xxlarge" weight="bold">Rocket Word Odyssey</text>
           <spacer size="small" />
 
           <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
@@ -290,109 +270,77 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       </zstack>
     );
   }
-  // <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle">
-  //   {/* Background image layer */}
-  //   <image 
-  //     url="space_background.jpg" 
-  //     imageWidth={1000} 
-  //     imageHeight={1000} 
-  //     height="100%"
-  //     width="100%"
-  //     position="absolute" 
-  //     top={0} 
-  //     left={0} 
-  //     zIndex={-1}
-  //   />
 
-  //   {/* Content layer */}
-  //   <vstack 
-  //     height="100%" 
-  //     width="100%" 
-  //     padding="large" 
-  //     gap="medium" 
-  //     alignment="center middle" 
-  //     backgroundColor="rgba(245, 245, 245, 0.7)" // Semi-transparent background
-  //     cornerRadius="medium"
-  //   >
-  //     <text size="xxlarge" weight="bold">Word Chain Puzzle</text>
-  //     <text size="medium">Transform "{gameState.startWord}" into "{gameState.targetWord}" one letter at a time!</text>
-
-  //     <spacer size="medium" />
-
-  //     <hstack gap="small">
-  //       <button appearance="primary" onPress={() => initializeGame('game')}>
-  //         Play Game
-  //       </button>
-  //       <button onPress={() => showInstructions()}>
-  //         How to Play
-  //       </button>
-  //     </hstack>
-  //   </vstack>
-  // </vstack>
   // ---------------------------------------------------------------------------------------------------------------------------------------
 
   // Game Screen
   if (screen === 'game') {
-    const rocketImages = [
-      "rocket_1.gif", // You would need to have these images uploaded to your app's assets
-      "rocket_2.gif",
-      "rocket_3.gif",
-    ];
 
     return (
-      <vstack height="100%" width="100%" padding="medium" gap="medium" backgroundColor="#f0f7ff">
-        <hstack width="100%" gap="large" alignment="top center">
-          <text>Moves: {gameState.moves}</text>
-          <button
-            icon="info"
-            appearance="secondary"
-            onPress={() => showInstructions()}
-          />
-        </hstack>
+      <zstack width="100%" height="100%" >
+        <image
+          url="space_background.jpg"
+          imageHeight="256px"
+          imageWidth="256px"
+          width="100%"
+          height="100%"
+          resizeMode="cover"
+        />
 
-        <vstack gap="small" alignment="center middle" grow>
-          <text size="large">Target Word: {gameState.targetWord}</text>
-          <text size="xlarge" weight="bold">{gameState.currentWord}</text>
-
-          {/* Custom input using standard text components */}
-          <hstack width="80%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small">
-            {/* Since textInput doesn't exist, we'll simulate it with a button that shows a form */}
-            <text>{inputWord || 'Enter new word...'}</text>
-            <spacer grow />
+        <vstack alignment="center middle" height="100%" width="100%">
+          <hstack width="100%" gap="large" alignment="top center">
+            <text>Moves: {gameState.moves}</text>
             <button
-              icon="edit"
+              icon="info"
               appearance="secondary"
-              onPress={() => {
-                // Show the form using the useForm hook
-                context.ui.showForm(wordInputForm);
-              }}
-            />
-            <button
-              icon="search"
-              appearance="primary"
-              onPress={() => submitWord(inputWord)}
+              onPress={() => showInstructions()}
             />
           </hstack>
 
-          {gameState.error && <text color="red" size="small">{gameState.error}</text>}
+          <vstack gap="small" alignment="center middle" grow width="100%">
+            <text size="large">Target Word: {gameState.targetWord}</text>
+            <text size="xlarge" weight="bold">{gameState.currentWord}</text>
 
-          <image
-            url="rocket.gif" // Or use rocketImages[rocketFrame] for animated frames
-            description="Animated rocket"
-            imageWidth={100}
-            imageHeight={100}
-          />
+            {/* Custom input using standard text components */}
+            <hstack width="80%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small">
+              {/* Since textInput doesn't exist, we'll simulate it with a button that shows a form */}
+              <text>{inputWord || 'Enter new word...'}</text>
+              <spacer grow />
+              <button
+                icon="edit"
+                appearance="secondary"
+                onPress={() => {
+                  // Show the form using the useForm hook
+                  context.ui.showForm(wordInputForm);
+                }}
+              />
+              <button
+                icon="search"
+                appearance="primary"
+                onPress={() => submitWord(inputWord)}
+              />
+            </hstack>
 
-          <spacer size="medium" />
+            {gameState.error && <text color="red" size="small">{gameState.error}</text>}
 
-          <text size="medium">Word Chain:</text>
-          <vstack padding="small" gap="small" width="80%">
-            {gameState.wordChain.map((word, index) => (
-              <text key={index.toString()}>{index + 1}. {word}</text>
-            ))}
+            <image
+              url="rocket.gif" // Or use rocketImages[rocketFrame] for animated frames
+              description="Animated rocket"
+              imageWidth={100}
+              imageHeight={100}
+            />
+
+            <spacer size="medium" />
+
+            <text size="medium">Word Chain:</text>
+            <vstack padding="small" gap="small" width="80%">
+              {gameState.wordChain.map((word, index) => (
+                <text key={index.toString()}>{index + 1}. {word}</text>
+              ))}
+            </vstack>
           </vstack>
         </vstack>
-      </vstack>
+      </zstack>
     );
   }
 
