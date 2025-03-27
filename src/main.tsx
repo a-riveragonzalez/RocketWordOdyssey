@@ -1,6 +1,12 @@
 // Learn more at developers.reddit.com/docs
 import { Devvit, useState, useForm } from '@devvit/public-api';
 
+import {
+  differsBy1Letter,
+  selectWordPairFromPostId,
+  validateWord
+} from './wordUtils.js';
+
 Devvit.configure({
   redditAPI: true,
 });
@@ -27,52 +33,17 @@ interface GameState {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-// ! Word Validation Functions 
-
-// todo Word validation helper with caching to reduce API calls
-const validateWord = async (word: string, context: Devvit.Context): Promise<boolean> => {
-  return context.cache(
-    async () => {
-      try {
-        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-        return response.status === 200;
-      } catch (error) {
-        console.error('Error validating word:', error);
-        return false;
-      }
-    },
-    {
-      key: `word_validation_${word.toLowerCase()}`,
-      ttl: 7 * 24 * 60 * 60 * 1000, // Cache for 7 days - dictionary words don't change often
-    }
-  );
-};
-
-// Check if two words differ by exactly one letter
-const differsBy1Letter = (word1: string, word2: string): boolean => {
-  if (word1.length !== word2.length) return false;
-
-  let differences = 0;
-  for (let i = 0; i < word1.length; i++) {
-    if (word1[i] !== word2[i]) differences++;
-    if (differences > 1) return false;
-  }
-
-  return differences === 1;
-};
-
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
 // ! Main game component
 
 const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
   // Performance tracking
   const [renderStart] = useState(Date.now());
 
-  // Game configuration - could be fetched from a configuration store
-  const [gameConfig] = useState({
-    startWord: 'COLD',
-    targetWord: 'WARM',
+  const selectedPair = selectWordPairFromPostId(context.postId!);
+
+  const [gameConfig, setGameConfig] = useState({
+    startWord: selectedPair.startWord.toUpperCase(),
+    targetWord: selectedPair.targetWord.toUpperCase(),
   });
 
   // Game screen state
@@ -80,34 +51,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
   // Input state for the custom input field
   const [inputWord, setInputWord] = useState<string>('');
-
-  // Animation state for the rocket
-  const [rocketFrame, setRocketFrame] = useState<number>(0);
-
-  // Create a form for word input using the useForm hook
-  const wordInputForm = useForm(
-    {
-      title: "Enter next word",
-      fields: [
-        {
-          type: "string",
-          name: "word",
-          label: "New Word",
-          placeholder: "Enter a word...",
-          required: true,
-          helpText: `Must differ by exactly one letter from the current word`,
-        }
-      ],
-      acceptLabel: "Submit",
-      cancelLabel: "Cancel"
-    },
-    async (values) => {
-      if (values && values.word) {
-        setInputWord(values.word);
-        await submitWord(values.word);
-      }
-    }
-  );
 
   // Core game state - consolidated for easier updates
   const [gameState, setGameState] = useState<GameState>({
@@ -121,10 +64,36 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
     error: '',
   });
 
+  // Create a form for word input using the useForm hook
+  const wordInputForm = useForm(
+    {
+      title: "Enter next word",
+      fields: [
+        {
+          type: "string",
+          name: "word",
+          label: "New Word",
+          placeholder: "Enter a word...",
+          required: false,
+          defaultValue: `${gameState.currentWord.toLowerCase()}`,
+          helpText: `New word must differ by exactly one letter from the current word. Current word: "${gameState.currentWord}" | Target Word: "${gameState.targetWord}"`,
+        }
+      ],
+      acceptLabel: "Submit",
+      cancelLabel: "Cancel"
+    },
+    async (values) => {
+      if (values && values.word) {
+        setInputWord(values.word);
+        await submitWord(values.word);
+      }
+    }
+  );
+
   // Log performance after initial render
   console.log(`Initial render took: ${Date.now() - renderStart} milliseconds`);
 
-  // todo Show instructions when the info button is pressed
+  // Show instructions when the info button is pressed
   const showInstructions = () => {
     context.ui.showToast({
       text: "Change one letter at a time to form valid words until you reach the target word.",
@@ -154,14 +123,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
         endTime: null,
         error: '',
       });
-
-      // Start rocket animation
-      const interval = setInterval(() => {
-        setRocketFrame(prev => (prev + 1) % 3); // Assuming 3 frames for animation
-      }, 300);
-
-      // Store interval ID for cleanup - use regular JavaScript setTimeout
-      setTimeout(() => clearInterval(interval), 30 * 60 * 1000); // Auto-cleanup after 30 minutes
     }
     setScreen(newScreen);
   };
@@ -214,7 +175,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
     console.log(`Word validation took: ${Date.now() - validationStart} milliseconds`);
 
-    // // for testing 
+    // Uncomment for production use
     // if (!isValid) {
     //   setGameState({
     //     ...gameState,
@@ -222,6 +183,19 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
     //   });
     //   return;
     // }
+
+    if (processedWord === gameState.targetWord) {
+      setGameState({
+        ...gameState,
+        endTime: Date.now(),
+        currentWord: processedWord,
+        wordChain: [...gameState.wordChain, processedWord],
+        moves: gameState.moves + 1,
+        error: ''
+      });
+      setScreen('complete');
+      return;
+    }
 
     // Update game state
     setGameState({
@@ -274,7 +248,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
   // Game Screen
   if (screen === 'game') {
-
     return (
       <zstack width="100%" height="100%" >
         <image
@@ -303,24 +276,16 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
             <spacer size="small" />
 
-            {/* Custom input using standard text components */}
             <hstack width="60%" alignment="center middle" gap="small" border="thin" cornerRadius="medium" padding="small">
-              {/* Since textInput doesn't exist, we'll simulate it with a button that shows a form */}
               <text>{inputWord || 'Enter new word...'}</text>
               <spacer grow />
               <button
                 icon="edit"
                 appearance="primary"
                 onPress={() => {
-                  // Show the form using the useForm hook
                   context.ui.showForm(wordInputForm);
                 }}
               />
-              {/* <button
-                icon="search"
-                appearance="primary"
-                onPress={() => submitWord(inputWord)}
-              /> */}
             </hstack>
 
             {gameState.error && <text color="red" size="small">{gameState.error}</text>}
@@ -328,7 +293,7 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
             <spacer size="small" />
 
             <image
-              url="rocket.gif" // Or use rocketImages[rocketFrame] for animated frames
+              url="rocket.gif"
               description="Animated rocket"
               imageWidth={100}
               imageHeight={100}
@@ -337,11 +302,20 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
             <spacer size="small" />
 
             <text size="medium">Word Chain:</text>
-            <hstack padding="small" gap="small" width="80%">
-              {gameState.wordChain.map((word, index) => (
-                <text key={index.toString()}>{index + 1}. {word}</text>
-              ))}
-            </hstack>
+
+            <vstack width="80%" gap="small">
+              <text size="small">{gameState.wordChain.length > 5 ? `(showing last 5 of ${gameState.wordChain.length})` : ''}</text>
+              <hstack padding="small" gap="small" alignment='center'>
+                {gameState.wordChain.length > 5 && <text>...</text>}
+                {gameState.wordChain.slice(-5).map((word, i) => {
+                  // Only show latest five words entered
+                  const startPos = Math.max(0, gameState.wordChain.length - 5);
+                  return (
+                    <text key={(startPos + i).toString()}>{startPos + i + 1}. {word}</text>
+                  );
+                })}
+              </hstack>
+            </vstack>
           </vstack>
         </vstack>
       </zstack>
@@ -357,31 +331,60 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
     const seconds = timeSpentSeconds % 60;
 
     return (
-      <vstack height="100%" width="100%" padding="large" gap="medium" alignment="center middle" backgroundColor="#1b262d">
-        <text size="xxlarge" weight="bold">Congratulations!</text>
-        <text size="large">You solved the puzzle!</text>
+      <zstack width="100%" height="100%" >
+        <image
+          url="space_background.jpg"
+          imageHeight="256px"
+          imageWidth="256px"
+          width="100%"
+          height="100%"
+          resizeMode="cover"
+        />
 
-        <spacer size="medium" />
+        <vstack alignment="center middle" height="100%" width="100%">
+          <text size="xxlarge" weight="bold" color="#FFFFFF">Congratulations!</text>
+          <spacer size="small" />
+          <text size="large">You solved the puzzle!</text>
 
-        <vstack padding="large" gap="medium" cornerRadius="medium" border="thin" width="80%">
-          <text size="large" weight="bold">Game Stats</text>
-          <text>Total Moves: {gameState.moves}</text>
-          <text>Time Spent: {minutes}m {seconds}s</text>
+          <spacer size="medium" />
 
-          <text size="medium">Word Chain:</text>
-          <vstack padding="small" gap="small">
-            {gameState.wordChain.map((word, index) => (
-              <text key={index.toString()}>{index + 1}. {word}</text>
-            ))}
-          </vstack>
+          <hstack>
+            <image
+              url="rocket_landed.png"
+              description="Rocket on the moon"
+              imageWidth={150}
+              imageHeight={250}
+            />
+
+            <spacer size="medium" />
+
+            <vstack padding="large" gap="medium" cornerRadius="medium" border="thin" width="80%" alignment="middle start">
+              <text size="large" weight="bold">Game Stats</text>
+              <text>Total Moves: {gameState.moves}</text>
+              <text>Time Spent: {minutes}m {seconds}s</text>
+              <text size="medium">Word Chain:</text>
+              <vstack padding="small" gap="small">
+                {Array.from({ length: Math.ceil(gameState.wordChain.length / 4) }).map((_, rowIndex) => (
+                  <hstack key={`row-${rowIndex}`} gap="small">
+                    {gameState.wordChain.slice(rowIndex * 4, rowIndex * 4 + 4).map((word, colIndex) => {
+                      const wordIndex = rowIndex * 4 + colIndex;
+                      return (
+                        <text key={wordIndex.toString()} size="small">{wordIndex + 1}. {word}</text>
+                      );
+                    })}
+                  </hstack>
+                ))}
+              </vstack>
+            </vstack>
+          </hstack>
+
+          <spacer size="medium" />
+
+          <button appearance="primary" onPress={() => initializeGame('start')}>
+            Play Again
+          </button>
         </vstack>
-
-        <spacer size="medium" />
-
-        <button appearance="primary" onPress={() => initializeGame('start')}>
-          Play Again
-        </button>
-      </vstack>
+      </zstack>
     );
   }
 
@@ -395,7 +398,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
 
 const PostPreview = () => (
   <zstack width="100%" height="100%" backgroundColor="#1e262b">
-
     <vstack alignment="center middle" height="100%" width="100%">
       <text size="large">Rocket Word Odyssey</text>
       <text size="medium">Loading game...</text>
@@ -411,9 +413,7 @@ const PostPreview = () => (
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-// ! 
-
-// Add a menu item to the subreddit menu
+// Add a menu item to the subreddit menu for on-demand games
 Devvit.addMenuItem({
   label: 'Play Word Puzzle',
   location: 'subreddit',
@@ -436,6 +436,67 @@ Devvit.addCustomPostType({
   name: 'Word Puzzle Game',
   height: 'tall',
   render: WordPuzzleGame,
+});
+
+// Add a scheduler job to create daily posts at 9am
+Devvit.addSchedulerJob({
+  name: 'create_daily_challenge',
+  onRun: async (_, context) => {
+    try {
+      const subreddit = await context.reddit.getCurrentSubreddit();
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      // Create a new post with today's date
+      const post = await context.reddit.submitPost({
+        title: `Daily Word Puzzle Challenge - ${formattedDate}`,
+        subredditName: subreddit.name,
+        preview: <PostPreview />,
+      });
+
+      console.log(`Created daily challenge for ${formattedDate} with post ID: ${post.id}`);
+
+      // Optional: Add a comment with instructions
+      await context.reddit.submitComment({
+        id: post.id,
+        text: "Welcome to today's word puzzle challenge! Can you solve it with the fewest moves? Share your solutions in the comments!"
+      });
+    } catch (e) {
+      console.error('Error creating daily challenge post:', e);
+    }
+  }
+});
+
+// Set up the app installation trigger
+Devvit.addTrigger({
+  event: 'AppInstall',
+  onEvent: async (_, context) => {
+    try {
+      // Create the first challenge immediately
+      await context.scheduler.runJob({
+        name: 'create_daily_challenge',
+        runAt: new Date(),
+      });
+
+      // Schedule the daily challenge creation at 9am
+      const jobId = await context.scheduler.runJob({
+        name: 'create_daily_challenge',
+        cron: '0 9 * * *', // Run at 9am every day
+      });
+
+      // Store the job ID for potential cancellation later
+      await context.redis.set('daily_challenge_jobId', jobId);
+
+      console.log('App installation completed, daily challenge scheduled');
+    } catch (e) {
+      console.error('Error during app installation:', e);
+      throw e;
+    }
+  }
 });
 
 export default Devvit;
