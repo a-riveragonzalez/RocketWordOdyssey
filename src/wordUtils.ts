@@ -29,19 +29,31 @@ export const selectWordPairFromPostId = (postId: string): WordPair => {
 };
 
 export const validateWord = async (word: string, context: Devvit.Context): Promise<boolean> => {
-    return context.cache(
-        async () => {
-            try {
-                const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-                return response.status === 200;
-            } catch (error) {
-                console.error('Error validating word:', error);
-                return false;
-            }
-        },
-        {
-            key: `word_validation_${word.toLowerCase()}`,
-            ttl: 7 * 24 * 60 * 60 * 1000,
-        }
-    );
+    try {
+        console.log(`Validating word: ${word}`);
+        
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        const data = await response.json();
+        
+        console.log('Validation Data:', JSON.stringify(data));
+        console.log('Is Array:', Array.isArray(data));
+        console.log('Data Length:', data.length);
+        console.log('First Item Meanings:', data[0]?.meanings);
+        console.log('Meanings Length:', data[0]?.meanings?.length);
+
+        const isValid = Array.isArray(data) && 
+                        data.length > 0 && 
+                        data[0].meanings && 
+                        data[0].meanings.length > 0;
+        
+        console.log('Is Valid Word:', isValid);
+        return isValid;
+    } catch (error) {
+        console.error('Full error during word validation:', error);
+        return false;
+    }
 };

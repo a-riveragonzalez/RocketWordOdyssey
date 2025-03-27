@@ -9,6 +9,7 @@ import {
 
 Devvit.configure({
   redditAPI: true,
+  http: true,
 });
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -167,23 +168,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
       return;
     }
 
-    // Performance tracking for word validation
-    const validationStart = Date.now();
-
-    // Validate against dictionary API (with caching)
-    const isValid = await validateWord(processedWord, context);
-
-    console.log(`Word validation took: ${Date.now() - validationStart} milliseconds`);
-
-    // Uncomment for production use
-    // if (!isValid) {
-    //   setGameState({
-    //     ...gameState,
-    //     error: 'Not a valid word.'
-    //   });
-    //   return;
-    // }
-
     if (processedWord === gameState.targetWord) {
       setGameState({
         ...gameState,
@@ -194,6 +178,23 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
         error: ''
       });
       setScreen('complete');
+      return;
+    }
+
+    // Performance tracking for word validation
+    const validationStart = Date.now();
+
+    // Validate against dictionary API (with caching)
+    const isValid = await validateWord(processedWord, context);
+
+    console.log(`Word validation took: ${Date.now() - validationStart} milliseconds`);
+
+    // Uncomment for production use
+    if (!isValid) {
+      setGameState({
+        ...gameState,
+        error: 'Not a valid word.'
+      });
       return;
     }
 
@@ -304,7 +305,6 @@ const WordPuzzleGame: Devvit.CustomPostComponent = (context) => {
             <text size="medium" color="#b7cad5">Word Chain:</text>
 
             <vstack width="80%" gap="small">
-              <text size="small" color="#b7cad5">{gameState.wordChain.length > 5 ? `(showing last 5 of ${gameState.wordChain.length})` : ''}</text>
               <hstack padding="small" gap="small" alignment='center'>
                 {gameState.wordChain.length > 5 && <text color="#b7cad5">...</text>}
                 {gameState.wordChain.slice(-5).map((word, i) => {
